@@ -1,0 +1,14 @@
+/home/laeth/RiderProjects/TextExcel3/bin/Debug/net9.0/TextExcel3
+/home/laeth/RiderProjects/TextExcel3/bin/Debug/net9.0/TextExcel3.deps.json
+/home/laeth/RiderProjects/TextExcel3/bin/Debug/net9.0/TextExcel3.runtimeconfig.json
+/home/laeth/RiderProjects/TextExcel3/bin/Debug/net9.0/TextExcel3.dll
+/home/laeth/RiderProjects/TextExcel3/bin/Debug/net9.0/TextExcel3.pdb
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.GeneratedMSBuildEditorConfig.editorconfig
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.AssemblyInfoInputs.cache
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.AssemblyInfo.cs
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.csproj.CoreCompileInputs.cache
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.dll
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/refint/TextExcel3.dll
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.pdb
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/TextExcel3.genruntimeconfig.cache
+/home/laeth/RiderProjects/TextExcel3/obj/Debug/net9.0/ref/TextExcel3.dll
