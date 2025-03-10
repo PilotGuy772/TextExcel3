@@ -5,11 +5,18 @@ namespace TextExcel3.Cells;
 /// </summary>
 public class EmptyCell : ICell
 {
-    public string FormattedRealValue { get; } = "<empty>";
+    public string RawValue { get; set; } = "";
+    public string FormattedRealValue => "<empty>";
+
     public string FormattedDisplayValue(int width)
     {
         string r = "";
         for (int i = 0; i < width; i++) r += " ";
         return r;
+    }
+
+    public override string ToString()
+    {
+        return "";
     }
 }

@@ -9,7 +9,16 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
 {
     private Spreadsheet Sheet { get; set; } = sheet;
     private DisplayWindow Window { get; set; } = window;
-
+    
+    /// <summary>
+    /// Clears out any text still in the formula bar
+    /// </summary>
+    public void ClearFormulaBar()
+    {
+        Console.SetCursorPosition(Window.FormulaBarValueStart, 0);
+        Console.Write(new string(' ', Console.WindowWidth - Console.CursorLeft));
+    }
+    
     public void FillCell(SpreadsheetLocation cell, ConsoleColor? background = null)
     {
         if (cell.Row < Window.VerticalRangeStart || cell.Row > Window.VerticalRangeStart + Window.VerticalRangeSize
@@ -32,6 +41,8 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
             Console.BackgroundColor = (ConsoleColor)background;
         
         Console.Write(Sheet.GetCell(cell).FormattedDisplayValue(10));
+        Console.BackgroundColor = old;
+
     }
 
     public void FillAllCells()
@@ -40,12 +51,22 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
         {
             for (int c = Window.HorizontalRangeStart; c <= Window.HorizontalRangeStart + Window.HorizontalRangeSize; c++)
             {
-                FillCell(new SpreadsheetLocation { Row = r, Column = c});
+                FillCell(new SpreadsheetLocation(c, r));
             }   
         }
         
         Console.SetCursorPosition(3, Window.CommandBarDistance);
         Console.CursorVisible = true;
+    }
+
+    public void FillFormulaRow(SpreadsheetLocation cell)
+    {
+        ClearFormulaBar(); 
+        Console.SetCursorPosition(2, 0);
+        Console.Write(cell.FriendlyName);
+        Console.Write(new string(' ', Window.FormulaBarCoordinateWidth - cell.FriendlyName.Length));
+        Console.CursorLeft = Window.FormulaBarValueStart;
+        Console.Write(Sheet.GetCell(cell).FormattedRealValue);
     }
     
 }

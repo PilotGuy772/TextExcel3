@@ -11,6 +11,7 @@ public class SpreadsheetLocation
     /// The normalized column represented by this location
     /// </summary>
     public int Column { get; set; }
+    public string FriendlyName { get; set; }
 
     /// <summary>
     /// Construct a new instance based on the Excel-friendly representation of a location.
@@ -21,9 +22,19 @@ public class SpreadsheetLocation
         // only support single-letter references for now
         Column = GetNumberFromLetter(id[0]);
         Row = int.Parse(id[1..]);
+        FriendlyName = id;
     }
 
-    public SpreadsheetLocation() {}
+    public SpreadsheetLocation(int x, int y)
+    {
+        Column = x;
+        Row = y;
+        FriendlyName = GetLetterFromNumber(x) + (y + 1);
+    }
+
+    public SpreadsheetLocation()
+    {
+    }
 
     /// <summary>
     /// Get the zero-indexed number representing the given letter's position in the alphabet

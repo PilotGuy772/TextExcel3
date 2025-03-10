@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("TextExcel3")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a294bf6117359bb03e8e197319923260f0d2888d")]
 [assembly: System.Reflection.AssemblyProductAttribute("TextExcel3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TextExcel3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

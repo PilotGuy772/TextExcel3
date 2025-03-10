@@ -5,6 +5,7 @@ namespace TextExcel3.Cells;
 /// </summary>
 public interface ICell
 {
+    //public T RawValue { get; set; }
     /// <summary>
     /// The string representation of this cell's actual content.
     /// </summary>
