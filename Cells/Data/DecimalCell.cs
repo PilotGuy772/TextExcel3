@@ -2,17 +2,18 @@ using System.Globalization;
 
 namespace TextExcel3.Cells.Data;
 
-public class DateCell(DateOnly value) : ICell
+/// <summary>
+/// A cell with a decimal value
+/// </summary>
+public class DecimalCell(decimal value) : ICell
 {
-    public DateOnly RawValue { get; set; } = value;
+    public decimal RawValue { get; set; } = value;
     public string FormattedRealValue => RawValue.ToString(CultureInfo.CurrentCulture);
     public string FormattedDisplayValue(int width)
     {
-        // use C#'s builtin localization features for this
-        // just right-align the output
         string value = RawValue.ToString(CultureInfo.CurrentCulture);
         if (value.Length > width) return value[..width];
-        return new string(' ', width - value.Length) + value;
+        return new string(' ', width - value.Length) + value;    
     }
     
     public override string ToString()

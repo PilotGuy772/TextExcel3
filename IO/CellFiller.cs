@@ -1,4 +1,5 @@
 using System.Security.Principal;
+using TextExcel3.Cells.Data.Util;
 
 namespace TextExcel3.IO;
 
@@ -67,6 +68,12 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
         Console.Write(new string(' ', Window.FormulaBarCoordinateWidth - cell.FriendlyName.Length));
         Console.CursorLeft = Window.FormulaBarValueStart;
         Console.Write(Sheet.GetCell(cell).FormattedRealValue);
+    }
+
+    public void FillCellRange(CellRange range)
+    {
+        foreach (SpreadsheetLocation loc in range.AllCells)
+            FillCell(loc);
     }
     
 }

@@ -16,7 +16,6 @@ public class Spreadsheet
     public int Width { get => Cells.GetLength(1); }
     public int Height { get => Cells.GetLength(0); }
     private (int X, int Y) CursorPosition { get; set; }
-    private bool Quit { get; set; }
 
     /// <summary>
     /// Initialize a new spreadsheet filled with empty cells of the default size (20r x 12c)
@@ -143,68 +142,14 @@ public class Spreadsheet
             Console.WriteLine();
         }
     }
-
-    /// <summary>
-    /// Start the command loop
-    /// </summary>
-    public void Run()
-    {
-        VimMode mode = VimMode.Normal;
-        
-        // VIM-like commands
-        // arrow keys as well as HJKL move you around the sheet
-        // use Console.ReadKey() to get inputs
-        while (!Quit)
-        {
-            Console.Clear();
-            
-            // print sheet first
-            Draw();
-            
-            ConsoleKeyInfo input = Console.ReadKey(true);
-            
-            // switch-case to decide what to do
-            switch (input.Key)
-            {
-                case ConsoleKey.UpArrow: case ConsoleKey.K:
-                    CursorPosition = (CursorPosition.X, Math.Max(0, CursorPosition.Y - 1));
-                    continue;
-                case ConsoleKey.DownArrow: case ConsoleKey.J:
-                    CursorPosition = (CursorPosition.X, Math.Min(Height - 1, CursorPosition.Y + 1));
-                    continue;
-                case ConsoleKey.LeftArrow: case ConsoleKey.H:
-                    CursorPosition = (Math.Max(0, CursorPosition.X - 1), CursorPosition.Y);
-                    continue;
-                case ConsoleKey.RightArrow: case ConsoleKey.L:
-                    CursorPosition = (Math.Min(Width - 1, CursorPosition.X + 1), CursorPosition.Y);
-                    continue;
-                case ConsoleKey.I:
-                    mode = VimMode.Insert;
-                    continue;
-                case ConsoleKey.V:
-                    mode = VimMode.Visual;
-                    continue;
-            }
-
-            switch (input.KeyChar)
-            {
-                case ':':
-                    // this is VIM-style command input
-                    Console.Write("\n: ");
-                    ProcessCommand(Console.ReadLine() ?? "");
-                    break;
-            }
-
-        }
-    }
-
-    private void ProcessCommand(string command)
+    
+    public void ProcessCommand(string command)
     {
         // process VIM-style text commands
         switch (command)
         {
-            case "q":
-                Quit = true;
+            case ":q":
+                Program.Quit = true;
                 break;
         }
     }

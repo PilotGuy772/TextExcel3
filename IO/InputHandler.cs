@@ -1,11 +1,34 @@
 using TextExcel3.Cells;
+using TextExcel3.Cells.Data.Util;
 
 namespace TextExcel3.IO;
 
 public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager data, CellFiller filler)
 {
-    public int CursorX { get; private set; } = window.HorizontalRangeStart;
-    public int CursorY { get; private set; } = window.VerticalRangeStart;
+    private int _cursorX = window.HorizontalRangeStart;
+    private int _cursorY = window.VerticalRangeStart;
+    private string CommandBuffer { get; set; } = "";
+
+    public int CursorX
+    {
+        get => _cursorX;
+        private set
+        {
+            OldCursorX = _cursorX;
+            OldCursorY = _cursorY;
+            _cursorX = value;
+        }
+    }
+    public int CursorY
+    {
+        get => _cursorY;
+        private set
+        {
+            OldCursorX = _cursorX;
+            OldCursorY = _cursorY;
+            _cursorY = value;
+        }
+    }
     public int OldCursorX { get; private set; } = window.HorizontalRangeStart;
     public int OldCursorY { get; private set; } = window.VerticalRangeStart;
     public SpreadsheetLocation CursorLocation
@@ -31,8 +54,8 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     public void RedrawCursorCells()
     {
         // update selected cell
-        filler.FillCell(new SpreadsheetLocation { Row = OldCursorY, Column = OldCursorX});
-        filler.FillCell(new SpreadsheetLocation { Row = CursorY, Column = CursorX}, ConsoleColor.Red);
+        Filler.FillCell(new SpreadsheetLocation { Row = OldCursorY, Column = OldCursorX});
+        Filler.FillCell(new SpreadsheetLocation { Row = CursorY, Column = CursorX}, ConsoleColor.Red);
     }
     
     private void InsertMode()
@@ -40,23 +63,43 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         Filler.ClearFormulaBar();
         Console.CursorVisible = true;
         Console.SetCursorPosition(Window.FormulaBarValueStart, 0);
-        string newRawValue =
-            LineSafeInput(Sheet.GetCell(CursorLocation).ToString() ?? "", true);
-        Data.AssignCell(CursorLocation, newRawValue);
-        Mode = VimMode.Normal;
+
+        try
+        {
+            string newRawValue =
+                LineSafeInput(Sheet.GetCell(CursorLocation).ToString() ?? "", true);
+
+            Data.AssignCell(CursorLocation, newRawValue);
+        }
+        catch
+        {
+            Mode = VimMode.Normal;
+            return;
+        }
         Console.CursorVisible = false;
+        
+        if (CursorY < Window.VerticalRangeStart + Window.VerticalRangeSize)
+        {
+            CursorY++;
+        }
+
+        RedrawCursorCells();
     }
 
-    public void AwaitInput(out string command)
+    public void AwaitInput()
     {
         Console.CursorVisible = false;
         // INSERT MODE //
         if (Mode == VimMode.Insert)
+        {
             InsertMode();
-        
-        
+            return;
+        }
+
+
         // NORMAL MODE //
-        filler.FillFormulaRow(new SpreadsheetLocation(CursorX, CursorY));
+        Filler.FillFormulaRow(CursorLocation);
+        RedrawCursorCells();
         // block for key input, then act according to the input
         ConsoleKeyInfo key = Console.ReadKey(true);
         
@@ -65,22 +108,23 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         {
             Console.SetCursorPosition(3, Window.CommandBarDistance);
             Console.CursorVisible = true;
-            command = LineSafeInput("/", true);
+            string command = LineSafeInput("/", true);
             Console.CursorVisible = false;
+            Sheet.ProcessCommand(command);
         }
         else if (key.KeyChar == ':')
         {
             Console.SetCursorPosition(3, Window.CommandBarDistance);
             Console.CursorVisible = true;
-            command = LineSafeInput(":", true);
+            string command = LineSafeInput(":", true);
             Console.CursorVisible = false;
+            Sheet.ProcessCommand(command);
         }
 
-        command = "";
-        OldCursorX = CursorX;
-        OldCursorY = CursorY;
+        bool useBuffer = false;
         switch (key.Key)
         {
+            /* VIM CURSOR MOVER INPUTS */
             case ConsoleKey.H: case ConsoleKey.LeftArrow:
                 if (CursorX == Window.HorizontalRangeStart) break;
                 CursorX--;
@@ -93,16 +137,71 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
                 if (CursorY == Window.VerticalRangeStart) break;
                 CursorY--;
                 break;
-            case ConsoleKey.J: case ConsoleKey.DownArrow:
+            case ConsoleKey.J: case ConsoleKey.DownArrow: case ConsoleKey.Enter:
                 if (CursorY == Window.VerticalRangeStart + Window.VerticalRangeSize) break;
                 CursorY++;
                 break;
-            case ConsoleKey.I: case ConsoleKey.Insert:
-                // insert mode
-                Mode = VimMode.Insert;
+            
+            default:
+                useBuffer = true;
                 break;
         }
+
+        if (!useBuffer)
+        {
+            RedrawCursorCells();
+            return;
+        }
         
+        // finally, for all other commands, use a buffer and input loop 
+        // exit the loop only when a valid command is received or escape is pressed
+        CommandBuffer += key.KeyChar;
+
+        if (CheckNormalModeCommand(CommandBuffer) || key.Key == ConsoleKey.Escape)
+        {
+            Console.CursorLeft = 3;
+            Console.Write(new string(' ', CommandBuffer.Length));
+            CommandBuffer = "";
+        }
+        else
+        {
+            Console.SetCursorPosition(3, Window.CommandBarDistance);
+            Console.Write(CommandBuffer);
+        }
+        
+        RedrawCursorCells();
+
+    }
+
+    private bool CheckNormalModeCommand(string buffer)
+    {
+        switch (buffer)
+        {
+            case "x":
+                Data.ClearCell(CursorLocation);
+                break;
+            case "dd":
+                Data.ClearRow(CursorY);
+                Filler.FillCellRange(new CellRange(new SpreadsheetLocation(
+                        Window.HorizontalRangeStart,
+                        CursorY),
+                    new SpreadsheetLocation(
+                        Window.HorizontalRangeStart + Window.HorizontalRangeSize,
+                        CursorY)));
+                
+                break;
+            case "i":
+                Mode = VimMode.Insert;
+                break;
+            case "s":
+                Mode = VimMode.Insert;
+                Data.ClearCell(CursorLocation);
+                break;
+            default:
+                return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -110,6 +209,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     /// </summary>
     /// <param name="prefill">The editable string to prefill in the input field</param>
     /// <returns>The string inputted by the user</returns>
+    /// <exception cref="IOException">Thrown when the user presses `escape`</exception>
     public static string LineSafeInput(string prefill = "", bool clearAfterInput = false)
     {
         Console.Write(prefill);
@@ -164,11 +264,13 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
                     break;
                 // escape voids input
                 case ConsoleKey.Escape:
-                    if (!clearAfterInput) return prefill;
-                    
-                    Console.CursorLeft -= cursorPos;
-                    Console.Write(new string(' ', input.Length));
-                    return prefill;
+                    if (clearAfterInput)
+                    {
+                        Console.CursorLeft -= cursorPos;
+                        Console.Write(new string(' ', input.Length));
+                    }
+
+                    throw new IOException("User escaped input field.");
                 default:
                     // if the cursor is not at the end, we need to account for overtype vs. insert
                     // so, after every input, we have to shift right
