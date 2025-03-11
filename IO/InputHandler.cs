@@ -64,26 +64,35 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         Console.CursorVisible = true;
         Console.SetCursorPosition(Window.FormulaBarValueStart, 0);
 
-        try
-        {
-            string newRawValue =
-                LineSafeInput(Sheet.GetCell(CursorLocation).ToString() ?? "", true);
+       
+        string newRawValue =
+            LineSafeInput(out ConsoleKeyInfo exitKey, Sheet.GetCell(CursorLocation).ToString() ?? "", true);
 
-            Data.AssignCell(CursorLocation, newRawValue);
-        }
-        catch
+        if (exitKey.Key == ConsoleKey.Escape)
         {
             Mode = VimMode.Normal;
             return;
         }
+        
+        Data.AssignCell(CursorLocation, newRawValue);
+        //Data.AssignCell(CursorLocation, ((int)exitKey.Modifiers).ToString());
+        
         Console.CursorVisible = false;
         
+        // Alt + Enter moves the cursor RIGHT instead of DOWN
+        if ((exitKey.Modifiers & ConsoleModifiers.Alt) != 0 && CursorX < Window.HorizontalRangeStart + Window.HorizontalRangeSize)
+        {
+            CursorX++;
+            RedrawCursorCells();
+            return;
+        }
+        
+        // No modifier moves the cursor DOWN
         if (CursorY < Window.VerticalRangeStart + Window.VerticalRangeSize)
         {
             CursorY++;
         }
 
-        RedrawCursorCells();
     }
 
     public void AwaitInput()
@@ -204,13 +213,17 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         return true;
     }
 
+    public static string LineSafeInput(string prefill = "", bool clearAfterInput = false) =>
+        LineSafeInput(out _, prefill, clearAfterInput);
+
     /// <summary>
     /// Step-by-step input that intercepts newlines and other disruptive characters. Input terminates when `RET` is received.
     /// </summary>
+    /// <param name="exitKey">Information about the key that was used to terminate the text input.</param>
     /// <param name="prefill">The editable string to prefill in the input field</param>
+    /// <param name="clearAfterInput">Whether to clear the input field after inputting is finished.</param>
     /// <returns>The string inputted by the user</returns>
-    /// <exception cref="IOException">Thrown when the user presses `escape`</exception>
-    public static string LineSafeInput(string prefill = "", bool clearAfterInput = false)
+    public static string LineSafeInput(out ConsoleKeyInfo exitKey, string prefill = "", bool clearAfterInput = false)
     {
         Console.Write(prefill);
         
@@ -218,7 +231,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         int cursorPos = prefill.Length;
         ConsoleKeyInfo key = Console.ReadKey(true);
         string input = prefill;
-        while (key.Key != ConsoleKey.Enter)
+        while (true)
         {
             switch (key.Key)
             {
@@ -260,17 +273,18 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
                     Console.CursorLeft++;
                     break;
                 // forbidden characters
-                case ConsoleKey.Tab: case ConsoleKey.UpArrow: case ConsoleKey.DownArrow: case ConsoleKey.Delete:
-                    break;
+                //case ConsoleKey.Tab: case ConsoleKey.UpArrow: case ConsoleKey.DownArrow:
+                //    break;
                 // escape voids input
-                case ConsoleKey.Escape:
+                case ConsoleKey.Escape: case ConsoleKey.Enter:
                     if (clearAfterInput)
                     {
                         Console.CursorLeft -= cursorPos;
                         Console.Write(new string(' ', input.Length));
                     }
 
-                    throw new IOException("User escaped input field.");
+                    exitKey = key;
+                    return input;
                 default:
                     // if the cursor is not at the end, we need to account for overtype vs. insert
                     // so, after every input, we have to shift right
@@ -287,13 +301,5 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
 
 
         }
-
-        Console.CursorLeft += input.Length - cursorPos;
-        
-        if (!clearAfterInput) return input;
-        
-        Console.CursorLeft -= cursorPos;
-        Console.Write(new string(' ', input.Length));
-        return input;
     }
 }
