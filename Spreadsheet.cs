@@ -1,6 +1,7 @@
 using System.Data;
 using System.Runtime.InteropServices;
 using TextExcel3.Cells;
+using TextExcel3.IO;
 
 namespace TextExcel3;
 
@@ -16,6 +17,8 @@ public class Spreadsheet
     public int Width => Cells[0].Count;
     public int Height => Cells.Count;
     private (int X, int Y) CursorPosition { get; set; }
+    public HistoryManager History { get; set; }
+
 
     /// <summary>
     /// Initialize a new spreadsheet filled with empty cells of the default size (20r x 12c)
@@ -43,11 +46,13 @@ public class Spreadsheet
         return Cells[location.Row][location.Column];
     }
 
-    public void SetCell(SpreadsheetLocation location, ICell newCell)
+    public void SetCell(SpreadsheetLocation location, ICell newCell, bool skipHistory = false)
     {
         VerifySize(location);
 
+        if (!skipHistory) History.RegisterAction(new ActionInformation(location, Cells[location.Row][location.Column], newCell));
         Cells[location.Row][location.Column] = newCell;
+        
     }
 
     private void VerifySize(SpreadsheetLocation location)
@@ -57,6 +62,17 @@ public class Spreadsheet
 
         while (Cells[location.Row].Count <= location.Column)
             Cells[location.Row].Add(new EmptyCell());
+    }
+
+    /// <summary>
+    /// Add a new row to the sheet AFTER (below) the given row number. Does nothing if the requested action would have no visible effect.
+    /// Please refill the grid after calling this to update affected cells.
+    /// </summary>
+    /// <param name="after"></param>
+    public void AddRow(int after)
+    {
+        if (Cells.Count <= after) return;
+        Cells.Insert(after, []);
     }
     
     public void ProcessCommand(string command)

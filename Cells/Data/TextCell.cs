@@ -2,7 +2,7 @@ namespace TextExcel3.Cells.Data;
 
 public class TextCell(string value) : ICell
 {
-    public string RawValue { get; set; } = value;
+    public string RawValue { get; } = value;
     public string FormattedRealValue => RawValue;
     public string FormattedDisplayValue(int width)
     {

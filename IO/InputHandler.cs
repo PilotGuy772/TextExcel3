@@ -3,12 +3,11 @@ using TextExcel3.Cells.Data.Util;
 
 namespace TextExcel3.IO;
 
-public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager data, CellFiller filler)
+public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager data, CellFiller filler, HistoryManager history)
 {
     private int _cursorX = window.HorizontalRangeStart;
     private int _cursorY = window.VerticalRangeStart;
     private string CommandBuffer { get; set; } = "";
-
     public int CursorX
     {
         get => _cursorX;
@@ -40,13 +39,13 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             CursorY = value.Row;
         }
     }
-    public int? SelectionStartX { get; private set; } = null;
-    public int? SelectionStartY { get; private set; } = null;
     private VimMode Mode { get; set; } = VimMode.Normal;
     private Spreadsheet Sheet { get; } = sheet;
     private DisplayWindow Window { get; } = window;
     private DataManager Data { get; } = data;
     private CellFiller Filler { get; } = filler;
+    private HistoryManager History { get; } = history;
+    private IClipboardItem? Clipboard { get; set; }
     
     /// <summary>
     /// Appropriately redraws cells affected by a change in the position of the cursor or the selection.
@@ -201,9 +200,34 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             case "i":
                 Mode = VimMode.Insert;
                 break;
+            case "Cd":
+                ScrollVertical(Window.VerticalRangeSize / 2);
+                break;
+            case "Cu":
+                ScrollVertical(Window.VerticalRangeSize / -2);
+                break;
+            case "gg":
+                ScrollVertical(Window.VerticalRangeStart * -1);
+                break;
             case "s":
-                Mode = VimMode.Insert;
-                Data.ClearCell(CursorLocation);
+                Sheet.AddRow(CursorY + 1);
+                Filler.FillAllCells();
+                break;
+            case "S":
+                Sheet.AddRow(CursorY);
+                Filler.FillAllCells();
+                break;
+            case "u":
+                History.Undo();
+                break;
+            case "Cr":
+                History.Redo();
+                break;
+            case "y":
+                Clipboard = new SingleCellClipboard(Sheet.GetCell(CursorLocation));
+                break;
+            case "p":
+                Clipboard?.PasteItem(Sheet, CursorLocation);
                 break;
             default:
                 return false;
@@ -211,8 +235,31 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         
         return true;
     }
+
+    public void ScrollHorizontal(int amount)
+    {
+        Window.PrintGrid(Window.VerticalRangeStart, Window.HorizontalRangeStart + amount);
+        Filler.FillAllCells();
+        RedrawCursorCells();
+    }
     
-    
+    public void ScrollVertical(int amount)
+    {
+        if (Window.VerticalRangeStart + amount < 0)
+        {
+            ScrollVertical(Window.VerticalRangeStart * -1);
+            return;
+        }
+        Window.PrintGrid(Window.VerticalRangeStart + amount, Window.HorizontalRangeStart);
+        if (CursorY < Window.VerticalRangeStart || CursorY > Window.VerticalRangeStart + Window.HorizontalRangeSize)
+        {
+            CursorY = Window.VerticalRangeStart + 1;
+            OldCursorY = CursorY;
+        }
+
+        Filler.FillAllCells();
+        RedrawCursorCells();
+    }
 
     public static string LineSafeInput(string prefill = "", bool clearAfterInput = false) =>
         LineSafeInput(out _, prefill, clearAfterInput);
@@ -286,6 +333,14 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
 
                     exitKey = key;
                     return input;
+                case ConsoleKey.Home:
+                    Console.CursorLeft -= cursorPos;
+                    cursorPos = 0;
+                    break;
+                case ConsoleKey.End:
+                    Console.CursorLeft += input.Length - cursorPos;
+                    cursorPos = input.Length;
+                    break;
                 default:
                     // if the cursor is not at the end, we need to account for overtype vs. insert
                     // so, after every input, we have to shift right

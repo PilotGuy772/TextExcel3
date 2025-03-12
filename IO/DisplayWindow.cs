@@ -37,7 +37,7 @@ public class DisplayWindow(Spreadsheet sheet)
         // able to handle the number of digits that might be in 
         // any given cell coordinate in this selection
         int deadSpace = (int)Math.Ceiling(
-            Math.Log10(verticalRangeStart + rows) + 
+            Math.Log10(verticalRangeStart + rows + 1) + 
             Math.Ceiling((horizontalRangeStart + columns) / 26.0));
 
         string formulaBar = " [" + new string(' ', deadSpace) + "] f(x) => ";

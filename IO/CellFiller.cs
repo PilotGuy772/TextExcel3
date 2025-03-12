@@ -31,7 +31,7 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
         if (cell.Row < Window.VerticalRangeStart || cell.Row > Window.VerticalRangeStart + Window.VerticalRangeSize
                                                  || cell.Column < Window.HorizontalRangeStart 
                                                  || cell.Column > Window.HorizontalRangeStart + Window.HorizontalRangeSize)
-            throw new ArgumentException("The given cell is out of the range of the display window.");
+            throw new ArgumentException("The given cell is out of the range of the display window: " + cell.Row + ", " + cell.Column);
         
         // first, find the console coordinates of the given cell
         // based on its spreadsheet location, the offsets, and the display range
