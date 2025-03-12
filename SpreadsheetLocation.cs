@@ -1,3 +1,5 @@
+using System.Text.RegularExpressions;
+
 namespace TextExcel3;
 
 public class SpreadsheetLocation
@@ -20,8 +22,13 @@ public class SpreadsheetLocation
     public SpreadsheetLocation(string id)
     {
         // only support single-letter references for now
-        Column = GetNumberFromLetter(id[0]);
-        Row = int.Parse(id[1..]);
+        MatchCollection matches = Regex.Matches(id, "[A-Z]");
+        string letters = "";
+        foreach (string m in matches) letters += m;
+        Column = GetNumberFromLetter(letters);
+        Row = int.Parse(id[(letters.Length)..]);
+        //Column = GetNumberFromLetter(id[0]);
+        //Row = int.Parse(id[1..]);
         FriendlyName = id;
     }
 
@@ -39,14 +46,41 @@ public class SpreadsheetLocation
     /// <summary>
     /// Get the zero-indexed number representing the given letter's position in the alphabet
     /// </summary>
-    /// <param name="letter">A CAPITAL letter in the alphabet A-Z</param>
+    /// <param name="letters"></param>
     /// <returns>The distance between A and `letter` in the alphabet</returns>
-    public static int GetNumberFromLetter(char letter) => letter - 'A';
-    
+    private static int GetNumberFromLetter(string letters)
+    {
+        // Z: 26; AA: 27; AZ: 52; 
+        //return letter - 'A';
+        // starts from the right and moves left
+        // each consecutive place value is worth 26 * distanceFromLeft
+        // basically, base-26 numerals
+
+        return letters.Aggregate(0, (current, t) => current * (26 + (t - 'A' + 1)));
+    }
+
     /// <summary>
     /// Gets the letter in the alphabet represented by the given zero-indexed number.
     /// </summary>
     /// <param name="number">A number between 0 and 25</param>
     /// <returns>The CAPITAL letter at the given position in the alphabet</returns>
-    public static string GetLetterFromNumber(int number) => ((char)('A' + number)).ToString();
+    public static string GetLetterFromNumber(int number)
+    {
+        number++;
+        //return ((char)('A' + number)).ToString();
+        //if (number < 1)
+        //    throw new ArgumentException("Number must be 1 or greater.");
+
+        string columnName = "";
+    
+        while (number > 0)
+        {
+            number--; // Adjust for 1-based indexing
+            char letter = (char)('A' + (number % 26));
+            columnName = letter + columnName;
+            number /= 26;
+        }
+
+        return columnName;
+    }
 }

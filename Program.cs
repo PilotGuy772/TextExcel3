@@ -18,11 +18,35 @@ class Program
         InputHandler input = new(excel, window, data, filler);
         
         filler.FillCell(new SpreadsheetLocation { Row = input.CursorY, Column = input.CursorX}, ConsoleColor.Red);
-
+        int consoleW = Console.WindowWidth;
+        int consoleH = Console.WindowHeight;
+        
         while (!Quit)
         {
-            input.AwaitInput();
-            input.RedrawCursorCells();
+            try
+            {
+                input.AwaitInput();
+                input.RedrawCursorCells();
+            }
+            catch(Exception e)
+            {
+                if (e is not ArgumentException) throw;
+            }
+            
+            if (Console.WindowHeight != consoleH || Console.WindowWidth != consoleW)
+            {
+                input.CursorX = 0;
+                input.CursorY = 0;
+                input.OldCursorX = 0;
+                input.OldCursorY = 0;
+                window.PrintGrid(0,0);
+
+                filler.FillAllCells();
+                input.RedrawCursorCells();
+                
+                consoleW = Console.WindowWidth;
+                consoleH = Console.WindowHeight;
+            }
         }
 
         Console.CursorVisible = true;

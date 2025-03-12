@@ -38,14 +38,15 @@ public class DataManager(Spreadsheet sheet)
 
         else newCell = new TextCell(input);
 
-        Sheet.Cells[cell.Row, cell.Column] = newCell;
+        Sheet.SetCell(cell, newCell);
     }
 
-    public void ClearCell(SpreadsheetLocation cell) => Sheet.Cells[cell.Row, cell.Column] = new EmptyCell();
+    public void ClearCell(SpreadsheetLocation cell) => Sheet.SetCell(cell, new EmptyCell());
+
 
     public void ClearRow(int row)
     {
         for (int c = 0; c < Sheet.Width; c++)
-            Sheet.Cells[row, c] = new EmptyCell();
+            Sheet.SetCell(new SpreadsheetLocation(c, row), new EmptyCell());
     }
 }

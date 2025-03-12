@@ -19,6 +19,12 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
         Console.SetCursorPosition(Window.FormulaBarValueStart, 0);
         Console.Write(new string(' ', Console.WindowWidth - Console.CursorLeft));
     }
+
+    public void ClearCommandBar()
+    {
+        Console.SetCursorPosition(3, Window.CommandBarDistance);
+        Console.Write(new string(' ', Console.WindowWidth - Console.CursorLeft));
+    }
     
     public void FillCell(SpreadsheetLocation cell, ConsoleColor? background = null)
     {
@@ -53,11 +59,11 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
             for (int c = Window.HorizontalRangeStart; c <= Window.HorizontalRangeStart + Window.HorizontalRangeSize; c++)
             {
                 FillCell(new SpreadsheetLocation(c, r));
-            }   
+            }
         }
         
-        Console.SetCursorPosition(3, Window.CommandBarDistance);
-        Console.CursorVisible = true;
+        //Console.SetCursorPosition(3, Window.CommandBarDistance);
+        //Console.CursorVisible = true;
     }
 
     public void FillFormulaRow(SpreadsheetLocation cell)

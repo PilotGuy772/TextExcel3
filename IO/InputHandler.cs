@@ -12,7 +12,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     public int CursorX
     {
         get => _cursorX;
-        private set
+        set
         {
             OldCursorX = _cursorX;
             OldCursorY = _cursorY;
@@ -22,15 +22,15 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     public int CursorY
     {
         get => _cursorY;
-        private set
+        set
         {
             OldCursorX = _cursorX;
             OldCursorY = _cursorY;
             _cursorY = value;
         }
     }
-    public int OldCursorX { get; private set; } = window.HorizontalRangeStart;
-    public int OldCursorY { get; private set; } = window.VerticalRangeStart;
+    public int OldCursorX { get; set; } = window.HorizontalRangeStart;
+    public int OldCursorY { get; set; } = window.VerticalRangeStart;
     public SpreadsheetLocation CursorLocation
     {
         get => new(CursorX, CursorY);
@@ -168,8 +168,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
 
         if (CheckNormalModeCommand(CommandBuffer) || key.Key == ConsoleKey.Escape)
         {
-            Console.CursorLeft = 3;
-            Console.Write(new string(' ', CommandBuffer.Length));
+            Filler.ClearCommandBar();
             CommandBuffer = "";
         }
         else
@@ -209,9 +208,11 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             default:
                 return false;
         }
-
+        
         return true;
     }
+    
+    
 
     public static string LineSafeInput(string prefill = "", bool clearAfterInput = false) =>
         LineSafeInput(out _, prefill, clearAfterInput);

@@ -28,9 +28,9 @@ public class DisplayWindow(Spreadsheet sheet)
         UsableWidthAndHeight(out int columns, out int rows);
 
         VerticalRangeStart = verticalRangeStart;
-        VerticalRangeSize = verticalRangeStart + rows > Sheet.Height ? Sheet.Height - verticalRangeStart - 1 : rows;
+        VerticalRangeSize = /*verticalRangeStart + rows > Sheet.Height ? Sheet.Height - verticalRangeStart - 1 :*/ rows;
         HorizontalRangeStart = horizontalRangeStart;
-        HorizontalRangeSize = horizontalRangeStart + columns > Sheet.Width ? Sheet.Width - horizontalRangeStart - 1 : columns;
+        HorizontalRangeSize = /*horizontalRangeStart + columns > Sheet.Width ? Sheet.Width - horizontalRangeStart - 1 :*/ columns;
         
         // start by printing formula bar
         // The amount of empty space between the braces has to be

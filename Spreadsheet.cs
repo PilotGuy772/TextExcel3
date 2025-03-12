@@ -12,9 +12,9 @@ public class Spreadsheet
     /// <summary>
     /// Central grid for the spreadsheet. Do not modify directly.
     /// </summary>
-    public ICell[,] Cells { get; set; }
-    public int Width { get => Cells.GetLength(1); }
-    public int Height { get => Cells.GetLength(0); }
+    public List<List<ICell>> Cells { get; set; }
+    public int Width => Cells[0].Count;
+    public int Height => Cells.Count;
     private (int X, int Y) CursorPosition { get; set; }
 
     /// <summary>
@@ -23,124 +23,40 @@ public class Spreadsheet
     public Spreadsheet()
     {
         CursorPosition = (0, 0);
-        Cells = new ICell[20, 12];
+        Cells = [];
         
-        for (int i = 0; i < Cells.GetLength(0); i++)
-            for (int j = 0; j < Cells.GetLength(1); j++)
-                Cells[i, j] = new EmptyCell();
-    }
-
-    public ICell GetCell(SpreadsheetLocation location) => Cells[location.Row, location.Column];
-    
-    public void Draw()
-    {
-        // start by writing the formula bar
-        Console.Write("  |" + SpreadsheetLocation.GetLetterFromNumber(CursorPosition.X) + (CursorPosition.Y + 1) + "| f: ");
-        Console.Write(Cells[CursorPosition.Y, CursorPosition.X].FormattedRealValue);
-        
-        // for now, all cells have a width of 10
-        Console.WriteLine();
-        int leftPadding = (int)Math.Floor(Math.Log10(Width));
-        
-        Console.Write(new string(' ', leftPadding + 2));
-        for (int topColumns = 0; topColumns < Width; topColumns++)
+        for (int i = 0; i < 20; i++)
         {
-            ColorWrite('|', CursorPosition.X == topColumns || CursorPosition.X == topColumns - 1 ? ConsoleColor.DarkRed : ConsoleColor.White);
-            
-            ColorWrite("-" + SpreadsheetLocation.GetLetterFromNumber(topColumns) + new string('-', 8),
-                topColumns == CursorPosition.X ? ConsoleColor.DarkRed : ConsoleColor.White);
-        }
-
-        Console.WriteLine('|');
-        ConsoleColor oldbg = Console.BackgroundColor;
-        
-        // Top row is now DONE, now to print cell contents in the grid
-        for (int r = 0; r < Height; r++)
-        {
-            // first, row number padded with justified padding
-            // this will print a space as many times as the number of digits in
-            // the total number of cells MINUS the number of digits in the current row number
-            ColorWrite(new string(' ', leftPadding - (int)Math.Floor(Math.Log10(r + 1))) + (r + 1), CursorPosition.Y == r ? ConsoleColor.DarkRed : ConsoleColor.White);
-            ConsoleColor color = ConsoleColor.White;
-            if (r == CursorPosition.Y | CursorPosition.X == 0) color = ConsoleColor.DarkRed;
-            if (r == CursorPosition.Y && CursorPosition.X == 0) color = ConsoleColor.Red;
-            ColorWrite(" |", color);
-            
-            // now to iterate through columns
-            for (int c = 0; c < Width; c++)
-            {
-                color = ConsoleColor.White;
-                char separator = '|';
-                
-                if (r == CursorPosition.Y) color = ConsoleColor.DarkRed;
-                else if (c == CursorPosition.X - 1 || c == CursorPosition.X) color = ConsoleColor.DarkRed;
-                
-                if (c == CursorPosition.X - 1 && r == CursorPosition.Y)
-                {
-                    // this cell is immediately to the LEFT of the selected cell
-                    separator = '>';
-                    color = ConsoleColor.Red;
-                    
-                }
-                else if (c == CursorPosition.X && r == CursorPosition.Y)
-                {
-                    // this cell is the selected cell
-                    separator = '<';
-                    color = ConsoleColor.Red;
-                    Console.BackgroundColor = ConsoleColor.Red;
-                }
-
-                Console.Write(Cells[r, c].FormattedDisplayValue(10));
-                Console.BackgroundColor = oldbg;
-                
-                ColorWrite(separator, color);
-            }
-
-            Console.WriteLine();
+            Cells.Add([]);
+            for (int j = 0; j < 20; j++)
+                Cells[i].Add(new EmptyCell());
         }
     }
 
-    /// <summary>
-    /// Draws and empty grid with no values in the cells. This will print a grid the size of the whole sheet, or as large as the character width and heights given.
-    /// </summary>
-    /// <param name="width">The maximum width to use to draw</param>
-    /// <param name="height">The maximum height to use to draw</param>
-    public void DrawGrid(int width, int height)
+    public ICell GetCell(SpreadsheetLocation location)
     {
-        // start by writing the formula bar
-        //Console.Write("  |" + SpreadsheetLocation.GetLetterFromNumber(CursorPosition.X) + (CursorPosition.Y + 1) + "| f: ");
-        //Console.Write(Cells[CursorPosition.Y, CursorPosition.X].FormattedRealValue);
-        
-        // for now, all cells have a width of 10
-        Console.WriteLine();
-        int leftPadding = (int)Math.Floor(Math.Log10(Width));
-        
-        Console.Write(new string(' ', leftPadding + 2));
-        for (int topColumns = 0; topColumns < Width; topColumns++)
-        {
-            Console.Write('|');
-            Console.Write("-" + SpreadsheetLocation.GetLetterFromNumber(topColumns) + new string('-', 8));
-        }
+        // try to get the given cell... if it errors or returns null, 
+        // resize the array and set the cell to a new empty cell
+        //return Cells[location.Row, location.Column];
+        VerifySize(location);
 
-        Console.WriteLine('|');
-        
-        // Top row is now DONE, now to print cell contents in the grid
-        for (int r = 0; r < Height; r++)
-        {
-            // first, row number padded with justified padding
-            // this will print a space as many times as the number of digits in
-            // the total number of cells MINUS the number of digits in the current row number
-            Console.Write(new string(' ', leftPadding - (int)Math.Floor(Math.Log10(r + 1))) + (r + 1));
-            Console.Write(" |");
-            
-            // now to iterate through columns
-            for (int c = 0; c < Width; c++)
-            {
-                Console.Write("          |");
-            }
+        return Cells[location.Row][location.Column];
+    }
 
-            Console.WriteLine();
-        }
+    public void SetCell(SpreadsheetLocation location, ICell newCell)
+    {
+        VerifySize(location);
+
+        Cells[location.Row][location.Column] = newCell;
+    }
+
+    private void VerifySize(SpreadsheetLocation location)
+    {
+        while (Cells.Count <= location.Row)
+            Cells.Add([]);
+
+        while (Cells[location.Row].Count <= location.Column)
+            Cells[location.Row].Add(new EmptyCell());
     }
     
     public void ProcessCommand(string command)
