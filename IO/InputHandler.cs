@@ -30,6 +30,8 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     }
     public int OldCursorX { get; set; } = window.HorizontalRangeStart;
     public int OldCursorY { get; set; } = window.VerticalRangeStart;
+    private CellRange? Selection { get; set; }
+    private CellRange? OldSelection { get; set; }
     public SpreadsheetLocation CursorLocation
     {
         get => new(CursorX, CursorY);
@@ -54,7 +56,21 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     {
         // update selected cell
         Filler.FillCell(new SpreadsheetLocation { Row = OldCursorY, Column = OldCursorX});
-        Filler.FillCell(new SpreadsheetLocation { Row = CursorY, Column = CursorX}, ConsoleColor.Red);
+
+        if (Mode == VimMode.Visual)
+        {
+            Selection ??= new CellRange(CursorLocation, CursorLocation);
+            OldSelection ??= new CellRange(CursorLocation, CursorLocation);
+            
+            OldSelection.RangeEnd.Column = Selection.RangeEnd.Column;
+            OldSelection.RangeEnd.Row = Selection.RangeEnd.Row;
+            Selection.RangeEnd = CursorLocation;
+            
+            Filler.FillCellRange(OldSelection);
+            Filler.FillCellRange(Selection, ConsoleColor.Cyan);
+        }
+        
+        Filler.FillCell(CursorLocation, ConsoleColor.Red);
     }
     
     private void InsertMode()
@@ -62,7 +78,6 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         Filler.ClearFormulaBar();
         Console.CursorVisible = true;
         Console.SetCursorPosition(Window.FormulaBarValueStart, 0);
-
        
         string newRawValue =
             LineSafeInput(out ConsoleKeyInfo exitKey, Sheet.GetCell(CursorLocation).ToString() ?? "", true);
@@ -94,6 +109,17 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
 
     }
 
+    // private void VisualMode()
+    // {
+    //     Selection ??= new CellRange(CursorLocation, CursorLocation);
+    //     OldSelection ??= new CellRange(CursorLocation, CursorLocation);
+    //     if (!Equals(Selection.RangeEnd, CursorLocation))
+    //     {
+    //         OldSelection = Selection;
+    //         Selection.RangeEnd = CursorLocation;
+    //     }
+    // }
+
     public void AwaitInput()
     {
         Console.CursorVisible = false;
@@ -104,7 +130,6 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             return;
         }
 
-
         // NORMAL MODE //
         Filler.FillFormulaRow(CursorLocation);
         RedrawCursorCells();
@@ -112,7 +137,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
         ConsoleKeyInfo key = Console.ReadKey(true);
         
         // first, check for a free text input command from the user
-        if (key.KeyChar == '/')
+        if (key.KeyChar == '/' && Mode == VimMode.Normal)
         {
             Console.SetCursorPosition(3, Window.CommandBarDistance);
             Console.CursorVisible = true;
@@ -150,6 +175,12 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
                 CursorY++;
                 break;
             
+            case ConsoleKey.Escape when Mode == VimMode.Visual && CommandBuffer.Length == 0:
+                Mode = VimMode.Normal;
+                Filler.FillCellRange(Selection);
+                Selection = null;
+                break;
+            
             default:
                 useBuffer = true;
                 break;
@@ -175,19 +206,22 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             Console.SetCursorPosition(3, Window.CommandBarDistance);
             Console.Write(CommandBuffer);
         }
+
+        
         
         RedrawCursorCells();
 
+        
     }
 
     private bool CheckNormalModeCommand(string buffer)
     {
         switch (buffer)
         {
-            case "x":
+            case "x" when Mode == VimMode.Normal:
                 Data.ClearCell(CursorLocation);
                 break;
-            case "dd":
+            case "dd" when Mode == VimMode.Normal:
                 Data.ClearRow(CursorY);
                 Filler.FillCellRange(new CellRange(new SpreadsheetLocation(
                         Window.HorizontalRangeStart,
@@ -197,7 +231,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
                         CursorY)));
                 
                 break;
-            case "i":
+            case "i" when Mode == VimMode.Normal:
                 Mode = VimMode.Insert;
                 break;
             case "Cd":
@@ -209,11 +243,11 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             case "gg":
                 ScrollVertical(Window.VerticalRangeStart * -1);
                 break;
-            case "s":
+            case "s" when Mode == VimMode.Normal:
                 Sheet.AddRow(CursorY + 1);
                 Filler.FillAllCells();
                 break;
-            case "S":
+            case "S" when Mode == VimMode.Normal:
                 Sheet.AddRow(CursorY);
                 Filler.FillAllCells();
                 break;
@@ -223,11 +257,28 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             case "Cr":
                 History.Redo();
                 break;
-            case "y":
+            case "y" when Mode == VimMode.Normal:
                 Clipboard = new SingleCellClipboard(Sheet.GetCell(CursorLocation));
                 break;
-            case "p":
+            case "y" when Mode == VimMode.Visual:
+                ICell[,] range = new ICell[CursorY - Selection.RangeStart.Row + 1, CursorX - Selection.RangeStart.Column + 1];
+                for (int r = Selection.RangeStart.Row; r <= Selection.RangeEnd.Row; r++)
+                {
+                    for (int c = Selection.RangeStart.Column; c <= Selection.RangeEnd.Column; c++)
+                    {
+                        range[r + Selection.RangeStart.Row, c + Selection.RangeStart.Column] = Sheet.GetCell(new SpreadsheetLocation(c, r));
+                    }
+                }
+
+                Clipboard = new RangeClipboard { Contents = range };
+                break;
+            case "p" when Mode == VimMode.Normal:
+                //if (Clipboard is null) Console.Beep();
                 Clipboard?.PasteItem(Sheet, CursorLocation);
+                Filler.FillAllCells();
+                break;
+            case "v":
+                Mode = VimMode.Visual;
                 break;
             default:
                 return false;
@@ -251,11 +302,11 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
             return;
         }
         Window.PrintGrid(Window.VerticalRangeStart + amount, Window.HorizontalRangeStart);
-        if (CursorY < Window.VerticalRangeStart || CursorY > Window.VerticalRangeStart + Window.HorizontalRangeSize)
-        {
-            CursorY = Window.VerticalRangeStart + 1;
-            OldCursorY = CursorY;
-        }
+        // if (CursorY < Window.VerticalRangeStart || CursorY > Window.VerticalRangeStart + Window.HorizontalRangeSize)
+        // {
+        //     CursorY = Window.VerticalRangeStart + 1;
+        //     OldCursorY = CursorY;
+        // }
 
         Filler.FillAllCells();
         RedrawCursorCells();

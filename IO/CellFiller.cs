@@ -76,10 +76,17 @@ public class CellFiller(Spreadsheet sheet, DisplayWindow window)
         Console.Write(Sheet.GetCell(cell).FormattedRealValue);
     }
 
-    public void FillCellRange(CellRange range)
+    public void FillCellRange(CellRange range, ConsoleColor? bg = null)
     {
         foreach (SpreadsheetLocation loc in range.AllCells)
-            FillCell(loc);
+        {
+            if (loc.Row < Window.VerticalRangeStart || loc.Row > Window.VerticalRangeStart + Window.VerticalRangeSize
+                                                    || loc.Column < Window.HorizontalRangeStart
+                                                    || loc.Column > Window.HorizontalRangeStart + Window.HorizontalRangeSize)
+                continue;
+            
+            FillCell(loc, bg);
+        }
     }
     
 }
