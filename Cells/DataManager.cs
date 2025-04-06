@@ -17,8 +17,15 @@ public class DataManager(Spreadsheet sheet)
         // double quotes around the data will force it to be a string
         
         ICell newCell;
-        
-        if (DateOnly.TryParse(input, out DateOnly date))
+        if (input.StartsWith('='))
+        {
+            newCell = new FormulaCell(input, Sheet);
+        }
+        else if (input.StartsWith('"') && input.EndsWith('"'))
+        {
+            newCell = new TextCell(input[1..^1]);
+        }
+        else if (DateOnly.TryParse(input, out DateOnly date))
         {
             newCell = new DateCell(date);
         }

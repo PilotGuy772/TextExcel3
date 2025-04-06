@@ -1,4 +1,5 @@
 ﻿using TextExcel3.Cells;
+using TextExcel3.Formulas;
 using TextExcel3.IO;
 
 namespace TextExcel3;
@@ -42,14 +43,14 @@ internal static class Program
                 input.OldCursorX = 0;
                 input.OldCursorY = 0;
                 window.PrintGrid(0,0);
-
+        
                 filler.FillAllCells();
                 input.RedrawCursorCells();
                 
                 consoleW = Console.WindowWidth;
                 consoleH = Console.WindowHeight;
             }
-
+        
             if (input.CursorX == window.HorizontalRangeStart + window.HorizontalRangeSize)
             {
                 input.ScrollHorizontal(1);
@@ -64,14 +65,14 @@ internal static class Program
             {
                 input.ScrollVertical(1);
             }
-
+        
             if (input.CursorY == window.VerticalRangeStart && input.CursorY != 0)
             {
                 input.ScrollVertical(-1);
             }
             
         }
-
+        
         Console.CursorVisible = true;
         Console.Clear();
     }

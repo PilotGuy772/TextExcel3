@@ -2,7 +2,7 @@ namespace TextExcel3.Cells.Data;
 
 public class PercentCell : ICell, IRealCell
 {
-    public decimal DecimalValue { get; }
+    public decimal DecimalValue => RawValue;
     public string FormattedRealValue => (RawValue * 100) + "%";
     
     private decimal RawValue { get; set; }
@@ -16,6 +16,11 @@ public class PercentCell : ICell, IRealCell
         string value = $"{(RawValue * 100):F2}%";
         if (value.Length > width) return value[..width];
         return new string(' ', width - value.Length) + value;   
+    }
+    
+    public override string ToString()
+    {
+        return FormattedRealValue;
     }
 
 }

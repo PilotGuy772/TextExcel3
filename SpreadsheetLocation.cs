@@ -22,11 +22,12 @@ public class SpreadsheetLocation
     public SpreadsheetLocation(string id)
     {
         // only support single-letter references for now
-        MatchCollection matches = Regex.Matches(id, "[A-Z]");
+        MatchCollection matches = Regex.Matches(id.ToUpper(), "[A-Z]");
         string letters = "";
-        foreach (string m in matches) letters += m;
+        foreach (Match m in matches) letters += m.Value;
+        //foreach (string m in matches) letters += m;
         Column = GetNumberFromLetter(letters);
-        Row = int.Parse(id[(letters.Length)..]);
+        Row = int.Parse(id[(letters.Length)..]) - 1;
         //Column = GetNumberFromLetter(id[0]);
         //Row = int.Parse(id[1..]);
         FriendlyName = id;
@@ -82,5 +83,10 @@ public class SpreadsheetLocation
         }
 
         return columnName;
+    }
+    
+    public override string ToString()
+    {
+        return FriendlyName;
     }
 }
