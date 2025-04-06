@@ -18,6 +18,7 @@ public class Spreadsheet
     public int Height => Cells.Count;
     private (int X, int Y) CursorPosition { get; set; }
     public HistoryManager History { get; set; }
+    public string? OpenFile { get; set; }
 
 
     /// <summary>
@@ -34,6 +35,22 @@ public class Spreadsheet
             for (int j = 0; j < 20; j++)
                 Cells[i].Add(new EmptyCell());
         }
+    }
+    
+    public string GetCsv()
+    {
+        string csv = "";
+        foreach (List<ICell> row in Cells)
+        {
+            foreach (ICell cell in row)
+            {
+                if (cell is EmptyCell) csv += ",";
+                else csv += cell.FormattedRealValue + ",";
+            }
+            csv = csv[..^1];
+            csv += "\n";
+        }
+        return csv;
     }
 
     public ICell GetCell(SpreadsheetLocation location)
@@ -78,8 +95,26 @@ public class Spreadsheet
     public void ProcessCommand(string command)
     {
         // process VIM-style text commands
+        if (command.StartsWith(":w"))
+        {
+            string[] args = command.Split(' ');
+            string filename;
+            if (args.Length > 1)
+                filename = args[1];
+            else if (OpenFile != null)
+                filename = OpenFile;
+            else return;
+            
+            Save(filename);
+            
+        }
+        
         switch (command)
         {
+            case ":wq":
+                ProcessCommand(":w");
+                ProcessCommand(":q");
+                return;
             case ":q":
                 Program.Quit = true;
                 break;
@@ -93,5 +128,17 @@ public class Spreadsheet
         Console.Write(text);
         Console.ForegroundColor = old;
         
+    }
+
+    public void Clear()
+    {
+        for (int r = 0; r < Cells.Count; r++)
+            for (int c = 0; c < Cells[r].Count; c++)
+                Cells[r][c] = new EmptyCell();
+    }
+
+    public void Save(string fileName)
+    {
+        File.WriteAllText(fileName, GetCsv());
     }
 }

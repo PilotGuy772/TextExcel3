@@ -3,9 +3,10 @@ namespace TextExcel3.Cells.Data;
 /// <summary>
 /// Cell that holds an integer value
 /// </summary>
-public class IntegerCell(int value) : ICell
+public class IntegerCell(int value) : ICell, IRealCell
 {
     public int RawValue { get; set; } = value;
+    public decimal DecimalValue => RawValue;
     public string FormattedRealValue => RawValue.ToString();
     public string FormattedDisplayValue(int width)
     {
@@ -19,4 +20,5 @@ public class IntegerCell(int value) : ICell
     {
         return FormattedRealValue;
     }
+
 }

@@ -1,25 +1,26 @@
 {
   "format": 1,
   "restore": {
-    "/home/laeth/RiderProjects/TextExcel3/TextExcel3.csproj": {}
+    "/Users/laeth/RiderProjects/TextExcel3/TextExcel3.csproj": {}
   },
   "projects": {
-    "/home/laeth/RiderProjects/TextExcel3/TextExcel3.csproj": {
+    "/Users/laeth/RiderProjects/TextExcel3/TextExcel3.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/laeth/RiderProjects/TextExcel3/TextExcel3.csproj",
+        "projectUniqueName": "/Users/laeth/RiderProjects/TextExcel3/TextExcel3.csproj",
         "projectName": "TextExcel3",
-        "projectPath": "/home/laeth/RiderProjects/TextExcel3/TextExcel3.csproj",
-        "packagesPath": "/home/laeth/.nuget/packages/",
-        "outputPath": "/home/laeth/RiderProjects/TextExcel3/obj/",
+        "projectPath": "/Users/laeth/RiderProjects/TextExcel3/TextExcel3.csproj",
+        "packagesPath": "/Users/laeth/.nuget/packages/",
+        "outputPath": "/Users/laeth/RiderProjects/TextExcel3/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/laeth/.nuget/NuGet/NuGet.Config"
+          "/Users/laeth/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net9.0"
         ],
         "sources": {
+          "/opt/homebrew/Cellar/dotnet/9.0.3/libexec/library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -54,18 +55,12 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "downloadDependencies": [
-            {
-              "name": "Microsoft.AspNetCore.App.Ref",
-              "version": "[9.0.2, 9.0.2]"
-            }
-          ],
           "frameworkReferences": {
             "Microsoft.NETCore.App": {
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/9.0.103/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/opt/homebrew/Cellar/dotnet/9.0.3/libexec/sdk/9.0.104/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

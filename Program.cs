@@ -6,9 +6,9 @@ namespace TextExcel3;
 internal static class Program
 {
     public static bool Quit { get; set; }
-    private static void Main()
+    private static void Main(string[] args)
     {
-        Spreadsheet excel = new Spreadsheet();
+        Spreadsheet excel = new();
         DisplayWindow window = new(excel);
         window.PrintGrid(0, 0);
         CellFiller filler = new(excel, window);
@@ -18,22 +18,22 @@ internal static class Program
         DataManager data = new(excel);
         InputHandler input = new(excel, window, data, filler, history);
         
+        if (args.Length > 0)
+        {
+            string fileName = args[0];
+            excel.OpenFile = fileName;
+            data.LoadCsv(File.ReadAllText(fileName));
+            filler.FillAllCells();
+        }
+        
         filler.FillCell(new SpreadsheetLocation { Row = input.CursorY, Column = input.CursorX}, ConsoleColor.Red);
         int consoleW = Console.WindowWidth;
         int consoleH = Console.WindowHeight;
         
         while (!Quit)
         {
-            try
-            {
-                input.AwaitInput();
-                input.RedrawCursorCells();
-            }
-            catch(Exception e)
-            {
-                //if (e is not ArgumentException) throw;
-                throw;
-            }
+            input.AwaitInput();
+            input.RedrawCursorCells();
             
             if (Console.WindowHeight != consoleH || Console.WindowWidth != consoleW)
             {

@@ -3,7 +3,13 @@ using TextExcel3.Cells.Data.Util;
 
 namespace TextExcel3.IO;
 
-public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager data, CellFiller filler, HistoryManager history)
+public class InputHandler(
+    Spreadsheet sheet,
+    DisplayWindow window,
+    DataManager data,
+    CellFiller filler,
+    HistoryManager history,
+    string? openFile = null)
 {
     private int _cursorX = window.HorizontalRangeStart;
     private int _cursorY = window.VerticalRangeStart;
@@ -48,6 +54,7 @@ public class InputHandler(Spreadsheet sheet, DisplayWindow window, DataManager d
     private CellFiller Filler { get; } = filler;
     private HistoryManager History { get; } = history;
     private IClipboardItem? Clipboard { get; set; }
+    public string? OpenFile { get; set; } = openFile;
     
     /// <summary>
     /// Appropriately redraws cells affected by a change in the position of the cursor or the selection.

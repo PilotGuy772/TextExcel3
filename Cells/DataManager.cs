@@ -16,8 +16,6 @@ public class DataManager(Spreadsheet sheet)
         // cells will default to the most specific data type that their data can be cast into, with TextCell being the least specific
         // double quotes around the data will force it to be a string
         
-        // TESTING just assign it to a textcell no matter what
-        //Sheet.Cells[cell.Row, cell.Column] = new TextCell(input.Trim());
         ICell newCell;
         
         if (DateOnly.TryParse(input, out DateOnly date))
@@ -36,6 +34,18 @@ public class DataManager(Spreadsheet sheet)
         {
             newCell = new DecimalCell(num);
         }
+        else if (input.EndsWith('%'))
+        {
+            string percentString = input.TrimEnd('%');
+            if (decimal.TryParse(percentString, out decimal percent))
+            {
+                newCell = new PercentCell(percent);
+            }
+            else
+            {
+                newCell = new TextCell(input);
+            }
+        }
 
         else newCell = new TextCell(input);
 
@@ -49,5 +59,24 @@ public class DataManager(Spreadsheet sheet)
     {
         for (int c = 0; c < Sheet.Width; c++)
             Sheet.SetCell(new SpreadsheetLocation(c, row), new EmptyCell());
+    }
+
+    /// <summary>
+    /// Clears the entire sheet and loads the given CSV into the sheet
+    /// </summary>
+    /// <param name="csv">Raw string representation of the CSV file to load</param>
+    public void LoadCsv(string csv)
+    {
+        Sheet.Clear();
+        string[] rows = csv.Split('\n');
+        for (int r = 0; r < rows.Length; r++)
+        {
+            string[] cells = rows[r].Split(',');
+            for (int c = 0; c < cells.Length; c++)
+            {
+                if (cells[c].Trim() == "") continue;
+                AssignCell(new SpreadsheetLocation(c, r), cells[c]);
+            }
+        }
     }
 }
