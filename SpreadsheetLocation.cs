@@ -20,8 +20,7 @@ public class SpreadsheetLocation
     /// </summary>
     /// <param name="id"></param>
     public SpreadsheetLocation(string id)
-    {
-        // only support single-letter references for now
+    { 
         MatchCollection matches = Regex.Matches(id.ToUpper(), "[A-Z]");
         string letters = "";
         foreach (Match m in matches) letters += m.Value;
